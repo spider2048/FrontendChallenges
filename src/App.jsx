@@ -1,35 +1,81 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import React from 'react'
 
-function App() {
-  const [count, setCount] = useState(0)
+export default class App extends React.Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            circles: [],
+            undoCircles: []
+        }
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+        this.placeCircleHandler = this.placeCircleHandler.bind(this)
+        this.undoChange = this.undoChange.bind(this)
+        this.redoChange = this.redoChange.bind(this)
+    }
+    
+    placeCircle(x, y) {
+        const circleSize = 100;
+        const circleStyle = {
+          marginLeft: x - circleSize / 2 + 'px',
+          marginTop: y - circleSize / 2 + 'px'
+        };
+      
+        return <div className='circle' style={circleStyle} />
+      }
+      
+
+    placeCircleHandler(e) {
+        const newCircles = [...this.state.circles]
+        newCircles.push(this.placeCircle(e.clientX, e.clientY))
+
+        this.setState({
+            circles: newCircles,
+            undoCircles: []
+        })
+    }
+
+    undoChange() {
+        if (this.state.circles.length == 0) {
+            return;
+        }
+
+        const newCircles = [...this.state.circles];
+        const lastCircle = newCircles.pop();
+    
+        this.setState(prevState => ({
+          circles: newCircles,
+          undoCircles: [...prevState.undoCircles, lastCircle]
+        }));
+      }
+    
+    redoChange() {
+        if (this.state.undoCircles.length == 0) {
+            return;
+        }
+
+        const newCircles = [...this.state.circles];
+        const newUndoCircles = [...this.state.undoCircles];
+        newCircles.push(newUndoCircles.pop());
+
+        this.setState({
+            circles: newCircles,
+            undoCircles: newUndoCircles
+        });
+    }
+    
+
+    render() {
+        return (
+            <div className='Wrapper'>
+                <div className='ButtonWrapper'>
+                    <button onClick={this.undoChange}>Undo</button>
+                    <button onClick={this.redoChange}>Redo</button>
+                </div>
+                <div className='App' onMouseDown={this.placeCircleHandler}>
+                    {this.state.circles}
+                </div>
+            </div>
+        )
+    }
 }
-
-export default App
